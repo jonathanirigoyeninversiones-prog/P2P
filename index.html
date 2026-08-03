@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>USDT / VES P2P Monitor - Firebase Oficial</title>
+    <title>NNNN USDT / VES P2P Tracker - Firebase Oficial</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -64,7 +64,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // Tus credenciales oficiales de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyA_isVMX4dVdHJdjqnt93vZas6k1C2v4ac",
             authDomain: "p2p-ves-tracker.firebaseapp.com",
@@ -126,7 +125,6 @@
                     document.getElementById('sell-price').innerText = sellPrice.toFixed(2) + " VES";
                     document.getElementById('spread-value').innerText = (sellPrice - buyPrice).toFixed(2) + " VES";
 
-                    // Guardar en la base de datos Firestore de Firebase
                     await addDoc(collection(db, "historial_p2p"), {
                         compra: buyPrice,
                         venta: sellPrice,
