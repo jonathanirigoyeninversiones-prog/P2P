@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NNNN USDT / VES P2P Tracker - Firebase Oficial</title>
+    <title>USDT / VES P2P - Monitor Histórico</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,16 +14,16 @@
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center space-x-3">
                 <div class="bg-amber-500 text-slate-950 p-2 rounded-lg font-black text-xl">
-                    <i class="fa-solid fa-database"></i>
+                    <i class="fa-solid fa-chart-line"></i>
                 </div>
                 <div>
                     <h1 class="text-xl font-bold text-white">USDT / VES <span class="text-amber-400 font-mono text-sm">P2P TRACKER</span></h1>
-                    <p class="text-xs text-slate-400">Soporte, Resistencia e Historial en Firebase</p>
+                    <p class="text-xs text-slate-400">Panel Histórico Oficial (Lectura Firebase)</p>
                 </div>
             </div>
             <div class="flex items-center space-x-2 bg-slate-800 px-4 py-2 rounded-full border border-slate-700">
-                <span id="sync-dot" class="w-3 h-3 rounded-full bg-amber-500 animate-pulse"></span>
-                <span class="text-xs font-mono text-amber-400 font-semibold" id="sync-status">Conectando a Firebase...</span>
+                <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-xs font-mono text-emerald-400 font-semibold" id="status-text">Conectado a Firebase</span>
             </div>
         </div>
     </header>
@@ -32,27 +32,27 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="bg-slate-900 border border-emerald-500/30 rounded-xl p-5 shadow-lg">
                 <p class="text-xs font-bold text-emerald-400 uppercase">Precio Compra P2P (Soporte)</p>
-                <h2 class="text-3xl font-mono text-white mt-1" id="buy-price">Sincronizando...</h2>
-                <p class="text-xs text-slate-400 mt-2">Zona ideal para adquirir USDT barato</p>
+                <h2 class="text-3xl font-mono text-white mt-1" id="buy-price">Cargando...</h2>
+                <p class="text-xs text-slate-400 mt-2">Último registro en base de datos</p>
             </div>
             <div class="bg-slate-900 border border-rose-500/30 rounded-xl p-5 shadow-lg">
                 <p class="text-xs font-bold text-rose-400 uppercase">Precio Venta P2P (Resistencia)</p>
-                <h2 class="text-3xl font-mono text-white mt-1" id="sell-price">Sincronizando...</h2>
-                <p class="text-xs text-slate-400 mt-2">Zona ideal para liquidar y ganar</p>
+                <h2 class="text-3xl font-mono text-white mt-1" id="sell-price">Cargando...</h2>
+                <p class="text-xs text-slate-400 mt-2">Último registro en base de datos</p>
             </div>
             <div class="bg-slate-900 border border-amber-500/30 rounded-xl p-5 shadow-lg flex flex-col justify-between">
                 <div>
                     <p class="text-xs font-bold text-amber-400 uppercase">Spread del Mercado</p>
                     <h2 class="text-3xl font-mono text-white mt-1" id="spread-value">0.00 VES</h2>
                 </div>
-                <p class="text-xs text-slate-400 mt-2">Margen bruto actual en bolívares</p>
+                <p class="text-xs text-slate-400 mt-2">Margen bruto registrado</p>
             </div>
         </div>
 
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-bold text-sm text-white"><i class="fa-solid fa-chart-line text-amber-400 mr-2"></i> Gráfica de Temporalidades (Firestore Firebase)</h3>
-                <span class="text-xs text-slate-400">Historial acumulado</span>
+                <h3 class="font-bold text-sm text-white"><i class="fa-solid fa-database text-amber-400 mr-2"></i> Gráfica de Tasas Acumuladas</h3>
+                <span class="text-xs text-slate-400">Historial en tiempo real</span>
             </div>
             <div class="h-72 w-full">
                 <canvas id="p2pChart"></canvas>
@@ -62,7 +62,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA_isVMX4dVdHJdjqnt93vZas6k1C2v4ac",
@@ -104,50 +104,9 @@
             });
         }
 
-        async function sincronizarBinanceYFirebase() {
+        async function cargarDatosFirebase() {
             try {
-                const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search');
-                
-                const [resBuy, resSell] = await Promise.all([
-                    fetch(proxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ asset: "USDT", fiat: "VES", merchantCheck: false, page: 1, rows: 1, tradeType: "BUY" }) }),
-                    fetch(proxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ asset: "USDT", fiat: "VES", merchantCheck: false, page: 1, rows: 1, tradeType: "SELL" }) })
-                ]);
-
-                const dataBuy = await resBuy.json();
-                const dataSell = await resSell.json();
-
-                if (dataBuy.data && dataBuy.data.length > 0 && dataSell.data && dataSell.data.length > 0) {
-                    const buyPrice = parseFloat(dataBuy.data[0].adv.price);
-                    const sellPrice = parseFloat(dataSell.data[0].adv.price);
-                    const horaActual = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                    document.getElementById('buy-price').innerText = buyPrice.toFixed(2) + " VES";
-                    document.getElementById('sell-price').innerText = sellPrice.toFixed(2) + " VES";
-                    document.getElementById('spread-value').innerText = (sellPrice - buyPrice).toFixed(2) + " VES";
-
-                    await addDoc(collection(db, "historial_p2p"), {
-                        compra: buyPrice,
-                        venta: sellPrice,
-                        fechaHora: horaActual,
-                        timestamp: serverTimestamp()
-                    });
-
-                    document.getElementById('sync-dot').className = "w-3 h-3 rounded-full bg-emerald-500 animate-pulse";
-                    document.getElementById('sync-status').innerText = "Firebase Sincronizado";
-                    document.getElementById('sync-status').className = "text-xs font-mono text-emerald-400 font-semibold";
-
-                    await cargarHistorialGrafica();
-                }
-            } catch (error) {
-                console.error("Error de sincronización:", error);
-                document.getElementById('sync-status').innerText = "Error de Conectividad";
-                await cargarHistorialGrafica();
-            }
-        }
-
-        async function cargarHistorialGrafica() {
-            try {
-                const q = query(collection(db, "historial_p2p"), orderBy("timestamp", "desc"), limit(15));
+                const q = query(collection(db, "historial_p2p"), orderBy("timestamp", "desc"), limit(20));
                 const querySnapshot = await getDocs(q);
                 
                 let labels = [];
@@ -155,22 +114,34 @@
                 let sellData = [];
 
                 querySnapshot.forEach((doc) => {
-                    const d = doc.data();
-                    labels.unshift(d.fechaHora || "Registro");
-                    buyData.unshift(d.compra);
-                    sellData.unshift(d.venta);
+                    const data = doc.data();
+                    labels.unshift(data.fechaHora || "Registro");
+                    buyData.unshift(data.compra);
+                    sellData.unshift(data.venta);
                 });
 
-                if (labels.length > 0) {
-                    initChart(labels, buyData, sellData);
+                if (buyData.length > 0) {
+                    const ultimoCompra = buyData[buyData.length - 1];
+                    const ultimoVenta = sellData[sellData.length - 1];
+
+                    document.getElementById('buy-price').innerText = ultimoCompra.toFixed(2) + " VES";
+                    document.getElementById('sell-price').innerText = ultimoVenta.toFixed(2) + " VES";
+                    document.getElementById('spread-value').innerText = (ultimoVenta - ultimoCompra).toFixed(2) + " VES";
+                } else {
+                    document.getElementById('buy-price').innerText = "Esperando gatillo...";
+                    document.getElementById('sell-price').innerText = "Esperando gatillo...";
                 }
-            } catch (e) {
-                console.error("Error leyendo Firestore:", e);
+
+                initChart(labels, buyData, sellData);
+            } catch (error) {
+                console.error("Error leyendo Firebase:", error);
+                document.getElementById('status-text').innerText = "Error de Lectura";
             }
         }
 
         window.onload = () => {
-            sincronizarBinanceYFirebase();
+            cargarDatosFirebase();
+            setInterval(cargarDatosFirebase, 30000); // Refresca la vista automáticamente cada 30 segundos
         };
     </script>
 </body>
